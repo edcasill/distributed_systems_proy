@@ -21,7 +21,8 @@ def enviar_a_api(estado):
 def video_model():
     model = YOLO('yolov8n-pose.pt')  # pretrained YOLO model with pose detection
     # model = YOLO('yolov8n.pt')
-    url = f"rtsp://{constants.USUARIOS[1]}:{constants.CONTRASENIA}@{constants.IPS[1]}/stream1"
+    camara_1 = f"rtsp://{constants.USUARIOS[0]}:{constants.CONTRASENIA}@{constants.IPS[3]}/stream1"
+    camara_2 = f"rtsp://{constants.USUARIOS[1]}:{constants.CONTRASENIA}@{constants.IPS[2]}/stream1"
     frame_count = 0  # procesa cada 5 frames
 
     # API data
@@ -31,15 +32,16 @@ def video_model():
     last_box = []
 
     cv2.namedWindow("Deteccion de actividad", cv2.WINDOW_NORMAL)
-    cap = cv2.VideoCapture(url)
+    cap1 = cv2.VideoCapture(camara_1)
+    cap2 = cv2.VideoCapture(camara_2)
 
-    while cap.isOpened():
-        success, frame = cap.read()
+    while cap2.isOpened():
+        success, frame = cap2.read()
         if not success:
             print('Reconectando')
-            cap.release()
+            cap2.release()
             time.sleep(3)
-            cap = cv2.VideoCapture(url)
+            cap2 = cv2.VideoCapture(camara_2)
             continue
 
         frame_count += 1
@@ -173,7 +175,7 @@ def video_model():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    cap.release()
+    cap2.release()
     cv2.destroyAllWindows()
 
 
