@@ -6,14 +6,14 @@ import time
 import constants
 
 
-# API_URL = "https://tu-api.com/registro"
-
-
 def enviar_a_api(estado, camara_id):
     try:
-        payload = {"actividad": estado, "camara": camara_id, "timestamp": time.time()}
-        # response = requests.post(API_URL, json=payload, timeout=2)
+        datos_camara = {"actividad": estado,
+                        "camara": camara_id,}
+        response = requests.post(constants.API_URL, json=datos_camara, timeout=2)
         print(f"API: [Cámara {camara_id}] Enviado -> {estado}")
+        print(f"Estado: ", response.status_code)
+        print(f"Respuesta de java: ", response.json())
 
     except Exception as e:
         print(f"Error API [Cámara {camara_id}]: {e}")
@@ -21,7 +21,7 @@ def enviar_a_api(estado, camara_id):
 
 def procesar_frame(frame, model, last_box_cache, ultimo_estado, ultimo_envio, camara_id, COOLDOWN_API):
     """
-    Esta función aísla la lógica para pasar cualquier frame de cualquier camara
+    Esta función aisla la lógica para pasar cualquier frame de cualquier camara
     y que devuelva el frame dibujado y las variables de control actualizadas.
     """
     results_skeleton = model(frame, verbose=False, imgsz=320)
@@ -79,8 +79,10 @@ def procesar_frame(frame, model, last_box_cache, ultimo_estado, ultimo_envio, ca
 
                     # Piernas Ocultas
                     else:
-                        estado = "Piernas Ocultas"
-                        color = (255, 165, 0)
+                        # estado = "Piernas Ocultas"
+                        # color = (255, 165, 0)
+                        estado = "Sentado"
+                        color = (0, 0, 255)
 
                 except IndexError:
                     estado = "Analizando..."
@@ -109,8 +111,8 @@ def video_model():
     model = YOLO('yolov8n-pose.pt')
 
     # Instanciar las camaras a usar
-    url1 = f"rtsp://{constants.USUARIOS[0]}:{constants.CONTRASENIA}@{constants.IPS[3]}/stream2"
-    url2 = f"rtsp://{constants.USUARIOS[1]}:{constants.CONTRASENIA}@{constants.IPS[2]}/stream2"
+    url1 = f"rtsp://{constants.USUARIOS[0]}:{constants.CONTRASENIA}@{constants.IPS[0]}/stream2"
+    url2 = f"rtsp://{constants.USUARIOS[1]}:{constants.CONTRASENIA}@{constants.IPS[1]}/stream2"
     cap1 = cv2.VideoCapture(url1)
     cap2 = cv2.VideoCapture(url2)
 
@@ -161,8 +163,8 @@ def video_model():
                 cv2.putText(frame2, estado, (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
         # Redimensionamos a un tamanio manejable
-        frame1_resized = cv2.resize(frame1, (640, 360))
-        frame2_resized = cv2.resize(frame2, (640, 360))
+        frame1_resized = cv2.resize(frame1, (700, 420))
+        frame2_resized = cv2.resize(frame2, (700, 420))
 
         # unir horizontalmente los frames
         frame_unido = np.hstack((frame1_resized, frame2_resized))
