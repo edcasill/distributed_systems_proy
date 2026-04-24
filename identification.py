@@ -84,23 +84,64 @@ def video_model():
                 cv2.putText(frame, estado, (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)"""
                         try:
                             y_cadera = kpts[11][1]
+                            x_cadera = kpts[11][0]
                             y_rodilla = kpts[13][1]
+                            x_rodilla = kpts[13][0]
                             y_hombro = kpts[5][1]
+                            x_hombro = kpts[5][0]
                             
                             # Filtro de confianza: Si no ve bien las piernas, no adivina
                             confianza_rodilla = kpts[13][2]
-                            
-                            if confianza_rodilla > 0.4:
-                                # Aplicamos tu lógica geométrica
-                                dif_pierna = abs(y_cadera - y_rodilla)
-                                dif_torso = abs(y_hombro - y_cadera)  # tomamos en cuenta la posicion del torso
+
+                            dif_y_torso = abs(y_hombro - y_cadera)  # tomamos en cuenta la posicion del torso
+                            dif_x_torso = abs(x_hombro - x_cadera)
+
+                            # ancho y alto de la box
+                            w = x2 - x1
+                            h = y2 - y1
+
+                            # arbol de desicion
+
+                            # A) Filtro Geométrico Absoluto: ¿Es más ancho que alto?
+                            # Si la caja de la persona es un 10% más ancha que alta, físicamente debe estar acostada
+                            if w > (h * 1.1):
+                                estado = "Acostado"
+                                color = (255, 0, 0)
                                 
-                                if dif_torso < 40:
+                            # B) Filtro de Vector del Torso
+                            # Si la distancia horizontal entre hombros y cadera es mayor que la vertical,
+                            # significa que el cuerpo está reclinado en la cama.
+                            elif dif_x_torso > dif_y_torso:
+                                estado = "Acostado"
+                                color = (255, 0, 0)
+                                
+                            # C) Filtro de Piernas (Sentado)
+                            elif confianza_rodilla > 0.4:
+                                dif_y_pierna = abs(y_cadera - y_rodilla)
+                                if dif_y_pierna < 45: 
+                                    estado = "Sentado"
+                                    color = (0, 0, 255)
+                                else:
+                                    estado = "De pie"
+                                    color = (0, 255, 0)
+                                    
+                            # D) Casos de baja confianza (cobijas gruesas, etc.)
+                            else:
+                                estado = "Piernas Ocultas (Sentado/Acostado)"
+                                color = (255, 165, 0) 
+                            
+                            """if confianza_rodilla > 0.4:
+                                # Aplicamos tu lógica geométrica
+                                dif_y_pierna = abs(y_cadera - y_rodilla)
+                                dif_y_torso = abs(y_hombro - y_cadera)  # tomamos en cuenta la posicion del torso
+                                dif_x_torso = abs(x_hombro - x_cadera)
+                                
+                                if dif_y_torso < 40:
                                     estado = "Acostado"
                                     color = (255, 0, 0)
 
                                 # Si la distancia en Y es muy pequeña, los muslos están horizontales
-                                if dif_pierna < 55: # Ajustar este pixelaje a tu cámara
+                                if dif_y_pierna < 55: # Ajustar este pixelaje a tu cámara
                                     estado = "Sentado"
                                     color = (0, 0, 255)
                                 else:
@@ -108,7 +149,7 @@ def video_model():
                                     color = (0, 255, 0)
                             else:
                                 estado = "Piernas Ocultas"
-                                color = (255, 165, 0) # Naranja
+                                color = (255, 165, 0) # Naranja"""
                                 
                         except IndexError:
                             estado = "Analizando..."
