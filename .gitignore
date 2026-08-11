@@ -1,0 +1,5 @@
+*.pt
+*.jpg
+__pycache__
+camera_test.py
+conexion.py
